@@ -1,14 +1,3 @@
-/**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
-
-let INPUTS_GLOBAL = readline().split(' ');
-
-const PLAYER_COUNT = parseInt(INPUTS_GLOBAL[0]); // the amount of players (always 2)
-const MY_ID = parseInt(INPUTS_GLOBAL[1]); // my player ID (0 or 1)
-const ZONE_COUNT = parseInt(INPUTS_GLOBAL[2]); // the amount of zones on the map
-const LINK_COUNT = parseInt(INPUTS_GLOBAL[3]); // the amount of links between all zones
 
 class Zone {
     constructor(options) {
@@ -31,30 +20,88 @@ class Zone {
         this.links.push(zone);
     }
 
-    isLinked(zone) {
-        return this.links.findIndex((innerZone) => {
-            return innerZone.id === zone.id;
-            }) !== -1;
+    get neighborhoods() {
+        return this.links.length;
     }
 
-    isHasMyPODs() {
+    get isHasMyPODs() {
         return this.pods[MY_ID] > 0;
     }
 
-    run() {
-        if (!this.isHasMyPODs()) {
-            return '';
-        }
-        let pods = this.pods[MY_ID];
-        let result = '';
-        for(let i = 0; i < this.links.length; i++) {
-            result += `1 ${this.id} ${this.links[i].id} `;
-        }
-        return result;
+    get isMyZone() {
+        return this.id === MY_ID;
+    }
+
+    // sync(pods) {
+    //     if (pods.length === this.pods)
+    // }
+}
+
+class Pod {
+    constructor(options) {
+        this.zone = options.zone;
+        this.experience = 0;
+        this._isMoved = false;
+        this.id = options.id || pods.length;
+        this.alive = true;
+    }
+
+    move() {
+        this._isMoved = true;
+    }
+
+    clear() {
+        this._isMoved = false;
+    }
+
+    get isMoved() {
+        return this._isMoved;
+    }
+
+    remove() {
+        this.alive = false;
     }
 }
 
+
+function sync(zone, podsInZone) {
+    if (zone.pods === podsInZone.length) {
+        return;
+    }
+    if (zone.pods) {
+        printErr(`opa ${zone.pods}/${podsInZone.length}`);
+    }
+    if (zone.pods > podsInZone.length) {
+        for (let i = zone.pods - podsInZone.length; i--;) {
+            let pod = new Pod({zone});
+            pods.push(pod);
+            printErr(`add pod #${pod.id} in zone #${zone.id}`);
+        }
+    } else if (zone.pods < podsInZone.length) {
+        for (let i = podsInZone.length - zone.pods; i--;) {
+            let pod = podsInZone[i-1];
+            pod.remove();
+            printErr(`die pod #${pod.id} in zone #${zone.id}`);
+        }
+    }
+}
+
+
+/**
+ * Auto-generated code below aims at helping you parse
+ * the standard input according to the problem statement.
+ **/
+
+let INPUTS_GLOBAL = readline().split(' ');
+
+const PLAYER_COUNT = parseInt(INPUTS_GLOBAL[0]); // the amount of players (always 2)
+const MY_ID = parseInt(INPUTS_GLOBAL[1]); // my player ID (0 or 1)
+const ZONE_COUNT = parseInt(INPUTS_GLOBAL[2]); // the amount of zones on the map
+const LINK_COUNT = parseInt(INPUTS_GLOBAL[3]); // the amount of links between all zones
+
+let steps = 0;
 const zones = {};
+const pods = [];
 
 // Init Zones
 for (let i = 0; i < ZONE_COUNT; i++) {
@@ -85,7 +132,7 @@ while (true) {
     const MY_PLATINUM = parseInt(readline()); // your available Platinum
     // printErr(`MY_PLATINUM:${MY_PLATINUM}`);
 
-    let result = '';
+    let zonesPodsAmount = 0;
 
     for (let i = 0; i < ZONE_COUNT; i++) {
         const INPUTS = readline().split(' ');
@@ -95,28 +142,29 @@ while (true) {
         const PODS_P1_IN_ZONE = parseInt(INPUTS[3]); // player 1's PODs on this zone
         const IS_VISIBLE_ZONE = parseInt(INPUTS[4]); // 1 if one of your units can see this tile, else 0
         const PLATINUM_AMOUNT = parseInt(INPUTS[5]); // the amount of Platinum this zone can provide (0 if hidden by fog)
-        zones[ZONE_ID].update({
+        let zone = zones[ZONE_ID];
+        zone.update({
             owner: ZONE_OWNER_ID,
             pods: [PODS_P0_IN_ZONE, PODS_P1_IN_ZONE],
             isVisible: IS_VISIBLE_ZONE,
             platinum: PLATINUM_AMOUNT
         });
 
-        result += zones[ZONE_ID].run();
+        sync(zone, pods.filter((pod) => {
+            return pod.zone.id === zone.id && pod.alive;
+        }));
     }
 
-    result = result.replace(/^\s+|\s+$/g,'');
+    let result = '';
 
-    // first line for movement commands, second line no longer used (see the protocol in the statement for details)
+    result = result.replace(/^\s+|\s+$/g,'');
+    // printErr('print: ' + result);
     print(result || 'WAIT');
     print('WAIT');
+    steps++;
 
-    // 1 245 259
-    // 11 272 262
-    // 1 285 272
-    // 1 286 285
-    // 2 319 320
-    // 3 326 327
-    // 1 327 320
-
+    // clear all PODs after moves(!)
+    pods.forEach((pod) => {
+        pod.clear();
+    });
 }
