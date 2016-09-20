@@ -1,10 +1,23 @@
 class Pod {
     constructor(options) {
+        this.id = options.id;
         this.zone = options.zone;
+        this.goalZone = undefined;
+        this.steps = [];
     }
 
     get owner() {
         return this.zone.owner;
+    }
+
+    move() {
+
+        if (!this.goalZone || !this.steps.length) {
+            this.goalZone = zones[PodsList.getRandomZone(zones)];
+            this.steps = PodsList.buildPath(zones, this.zone, this.goalZone);
+            printErr(`~~ create goal #${this.goalZone.id} for zone #${this.id}`);
+        }
+        printErr(`~~ move pod #${this.id}, step #${this.steps[0]}`);
     }
 }
 // =============================================================================================
@@ -19,15 +32,37 @@ class PodsList {
         }, 0);
     }
 
-    addPod(pod) {
-        this.pods.push(pod);
+    addPodInZone(zone) {
+        const id = `${zone.id}.${this.pods.length + 1}`;
+        this.pods.push(new Pod({
+            id,
+            zone
+        }));
+        printErr(`++ new pod #${id}`);
     }
 
     removePodFromZone(zone) {
         let index = this.pods.findIndex((pod) => {
             return pod.zone.id === zone.id;
         });
+        printErr(`-- kill pod #${this.pods[index].id}`);
         this.pods.splice(index, 1);
+    }
+
+    moveAll() {
+        this.pods.forEach((pod) => {
+            pod.move();
+        });
+    }
+
+    static getRandomZone(zones) {
+        return Math.floor(Math.random() * Object.keys(zones).length) + 1;
+    }
+
+    static buildPath(zones, zoneFrom, zoneTo) {
+        let result = [];
+
+        return result;
     }
 }
 // =============================================================================================
@@ -50,16 +85,12 @@ class Zone {
         const podsInZone = podsList.podsInZone(this);
         if (podsInZone > this.pods[GAME_CONF.MY_ID]) {
             for (let i = this.pods[GAME_CONF.MY_ID] - podsInZone; i--;) {
-                printErr(`-- kill pod in zone ${this.id}`);
                 podsList.removePodFromZone(this);
             }
 
         } else if (this.pods[GAME_CONF.MY_ID] > podsInZone) {
             for (let i = this.pods[GAME_CONF.MY_ID] - podsInZone; i--;) {
-                printErr(`++ new pod in zone ${this.id}`);
-                podsList.addPod(new Pod({
-                    zone: this
-                }));
+                podsList.addPodInZone(this);
             }
         }
     }
@@ -85,7 +116,6 @@ class Zone {
     }
 }
 // =============================================================================================
-
 
 printErr(`~~~~~~~~~~~~~~~~~~ STEP #0 ~~~~~~~~~~~~~~~~~~`);
 
@@ -199,6 +229,7 @@ while (true) {
         }
     }
 
+    // for debug
     let _zonesStat = {};
     Object.keys(zones).forEach((key) => {
         let zone = zones[key];
@@ -206,6 +237,8 @@ while (true) {
         _zonesStat[zone.pods]++;
     });
     printErr(`_zonesStat.amountPods: ${JSON.stringify(_zonesStat)}`);
+
+    let moves = podsList.moveAll();
 
     let result = '';
     result = result.replace(/^\s+|\s+$/g,'');
