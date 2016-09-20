@@ -11,13 +11,12 @@ class Pod {
     }
 
     move() {
-
         if (!this.goalZone || !this.steps.length) {
             this.goalZone = zones[PodsList.getRandomZone(zones, this.zone)];
-            this.steps = PodsList.buildPath(zones, this.zone, this.goalZone);
-            printErr(`~~ create goal #${this.goalZone.id} for zone #${this.id}`);
+            // this.steps = PodsList.buildPath(zones, this.zone, this.goalZone);
+            // printErr(`~~ create goal #${this.goalZone.id} for zone #${this.id}`);
         }
-        printErr(`~~ move pod #${this.id}, step #${this.steps[0]}`);
+        // printErr(`~~ move pod #${this.id}, step #${this.steps[0]}`);
     }
 }
 // =============================================================================================
@@ -60,71 +59,6 @@ class PodsList {
         for (result = Math.floor(Math.random() * Object.keys(zones).length) + 1; result === zone.id;) {}
         return result;
     }
-
-    static buildPath(zones, zoneFrom, zoneTo) {
-        printErr(`@buildPath #${zoneFrom.id}->${zoneTo.id}`);
-
-        const markZones = (zones, zoneFrom, zoneTo, step = 1) => {
-            // printErr(`@markZones #${zoneFrom.id}->${zoneTo.id}, step#${step}`);
-            zoneTo.links.forEach((zoneId) => {
-                if (!zones[zoneId].step) {
-                    zones[zoneId].step = step;
-                    // printErr(`@step mark #${zoneTo.id}->#${_zone.id} === ${step}`);
-                }
-            });
-            zoneTo.links.forEach((zoneId) => {
-                if (zones[zoneId].step === step) {// + 1 && [zoneFrom.id, zoneTo.id].indexOf(_zone.id) !== -1
-                    markZones(zones, zoneFrom, zones[zoneId], step + 1);
-                }
-            });
-        };
-
-        let _zones = Object.assign({}, zones);
-
-        markZones(_zones, zoneFrom, zoneTo, 1);
-
-        const _buildPath = (zones, zoneFrom, zoneTo, step = 1) => {
-            // for debug
-            let ids = zoneTo.links.reduce((s, zoneId) => {
-                return s + `${zones[zoneId].id}|`;
-            }, '');
-            printErr(`@_buildPath:  #${step} ${zoneFrom.id}->${zoneTo.id} (${ids})`);
-            let next = zoneTo.links.find((zoneId) => {
-                return zones[zoneId].step === step;
-            });
-            if (!next) {
-                printErr(`O_o: ${step}`);
-                return [];
-            }
-            if (next.id === zoneFrom.id) {
-                return next;
-            }
-            return [next].concat(_buildPath(zones, zoneFrom, next, step + 1));
-        };
-
-        let result = _buildPath(_zones, zoneFrom, zoneTo);
-
-        let _s = result.reduce((s, _zone) => {
-            return s + `${_zone.id}|`;
-        }, '');
-        printErr(`@_s: ${JSON.stringify(_s)}`);
-
-        let _ss = zoneFrom.links.reduce((s, zoneId) => {
-            return s + `${zones[zoneId].id}|`;
-        }, '');
-        printErr(`@zoneFrom: ${JSON.stringify(_ss)}`);
-
-
-        let _sss = zoneTo.links.reduce((s, zoneId) => {
-            return s + `${zones[zoneId].id}|`;
-        }, '');
-        printErr(`@zoneTo: ${JSON.stringify(_sss)}`);
-
-        printErr(`@result: ${JSON.stringify(result)}`);
-        printErr(`@_zones: ${JSON.stringify(_zones)}`);
-
-        return result;
-    }
 }
 // =============================================================================================
 class Zone {
@@ -160,7 +94,7 @@ class Zone {
         this.links.push(zone.id);
     }
 
-    get neighborhoods() {
+    get neighbor() {
         return this.links.length;
     }
 
@@ -233,21 +167,21 @@ for (let i = 0; i < GAME_CONF.LINK_AMOUNT; i++) {
 // =============================================================================================
 
 // for debug
-let _zonesStat = {};
-Object.keys(zones).forEach((key) => {
-    let zone = zones[key];
-    _zonesStat[zone.neighborhoods] = _zonesStat[zone.neighborhoods] || 0;
-    _zonesStat[zone.neighborhoods]++;
-});
-printErr(`_zonesStat.amountNeighborhoods: ${JSON.stringify(_zonesStat)}`);
+// let _zonesStat = {};
+// Object.keys(zones).forEach((key) => {
+//     let zone = zones[key];
+//     _zonesStat[zone.neighbor] = _zonesStat[zone.neighbor] || 0;
+//     _zonesStat[zone.neighbor]++;
+// });
+// printErr(`_zonesStat.amountneighbor: ${JSON.stringify(_zonesStat)}`);
 
-_zonesStat = {};
-Object.keys(zones).forEach((key) => {
-    let zone = zones[key];
-    _zonesStat[zone.pods] = _zonesStat[zone.pods] || 0;
-    _zonesStat[zone.pods]++;
-});
-printErr(`_zonesStat.amountPods: ${JSON.stringify(_zonesStat)}`);
+// _zonesStat = {};
+// Object.keys(zones).forEach((key) => {
+//     let zone = zones[key];
+//     _zonesStat[zone.pods] = _zonesStat[zone.pods] || 0;
+//     _zonesStat[zone.pods]++;
+// });
+// printErr(`_zonesStat.amountPods: ${JSON.stringify(_zonesStat)}`);
 
 // =============================================================================================
 
@@ -291,15 +225,21 @@ while (true) {
     }
 
     // for debug
-    let _zonesStat = {};
-    Object.keys(zones).forEach((key) => {
-        let zone = zones[key];
-        _zonesStat[zone.pods] = _zonesStat[zone.pods] || 0;
-        _zonesStat[zone.pods]++;
-    });
-    printErr(`_zonesStat.amountPods: ${JSON.stringify(_zonesStat)}`);
+    // let _zonesStat = {};
+    // Object.keys(zones).forEach((key) => {
+    //     let zone = zones[key];
+    //     _zonesStat[zone.pods] = _zonesStat[zone.pods] || 0;
+    //     _zonesStat[zone.pods]++;
+    // });
+    // printErr(`_zonesStat.amountPods: ${JSON.stringify(_zonesStat)}`);
 
     let moves = podsList.moveAll();
+    // printErr(`_moves: ${JSON.stringify(moves)}`);
+
+    Object.keys(zones).forEach((key) => {
+        printErr(`key: ${JSON.stringify(zones[key])}`);
+    });
+    printErr(moves.xxx);
 
     let result = '';
     result = result.replace(/^\s+|\s+$/g,'');
