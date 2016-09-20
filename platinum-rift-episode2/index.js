@@ -13,7 +13,7 @@ class Pod {
     move() {
 
         if (!this.goalZone || !this.steps.length) {
-            this.goalZone = zones[PodsList.getRandomZone(zones)];
+            this.goalZone = zones[PodsList.getRandomZone(zones, this.zone)];
             this.steps = PodsList.buildPath(zones, this.zone, this.goalZone);
             printErr(`~~ create goal #${this.goalZone.id} for zone #${this.id}`);
         }
@@ -55,12 +55,73 @@ class PodsList {
         });
     }
 
-    static getRandomZone(zones) {
-        return Math.floor(Math.random() * Object.keys(zones).length) + 1;
+    static getRandomZone(zones, zone) {
+        let result;
+        for (result = Math.floor(Math.random() * Object.keys(zones).length) + 1; result === zone.id;) {}
+        return result;
     }
 
     static buildPath(zones, zoneFrom, zoneTo) {
-        let result = [];
+        printErr(`@buildPath #${zoneFrom.id}->${zoneTo.id}`);
+
+        const markZones = (zones, zoneFrom, zoneTo, step = 1) => {
+            // printErr(`@markZones #${zoneFrom.id}->${zoneTo.id}, step#${step}`);
+            zoneTo.links.forEach((zoneId) => {
+                if (!zones[zoneId].step) {
+                    zones[zoneId].step = step;
+                    // printErr(`@step mark #${zoneTo.id}->#${_zone.id} === ${step}`);
+                }
+            });
+            zoneTo.links.forEach((zoneId) => {
+                if (zones[zoneId].step === step) {// + 1 && [zoneFrom.id, zoneTo.id].indexOf(_zone.id) !== -1
+                    markZones(zones, zoneFrom, zones[zoneId], step + 1);
+                }
+            });
+        };
+
+        let _zones = Object.assign({}, zones);
+
+        markZones(_zones, zoneFrom, zoneTo, 1);
+
+        const _buildPath = (zones, zoneFrom, zoneTo, step = 1) => {
+            // for debug
+            let ids = zoneTo.links.reduce((s, zoneId) => {
+                return s + `${zones[zoneId].id}|`;
+            }, '');
+            printErr(`@_buildPath:  #${step} ${zoneFrom.id}->${zoneTo.id} (${ids})`);
+            let next = zoneTo.links.find((zoneId) => {
+                return zones[zoneId].step === step;
+            });
+            if (!next) {
+                printErr(`O_o: ${step}`);
+                return [];
+            }
+            if (next.id === zoneFrom.id) {
+                return next;
+            }
+            return [next].concat(_buildPath(zones, zoneFrom, next, step + 1));
+        };
+
+        let result = _buildPath(_zones, zoneFrom, zoneTo);
+
+        let _s = result.reduce((s, _zone) => {
+            return s + `${_zone.id}|`;
+        }, '');
+        printErr(`@_s: ${JSON.stringify(_s)}`);
+
+        let _ss = zoneFrom.links.reduce((s, zoneId) => {
+            return s + `${zones[zoneId].id}|`;
+        }, '');
+        printErr(`@zoneFrom: ${JSON.stringify(_ss)}`);
+
+
+        let _sss = zoneTo.links.reduce((s, zoneId) => {
+            return s + `${zones[zoneId].id}|`;
+        }, '');
+        printErr(`@zoneTo: ${JSON.stringify(_sss)}`);
+
+        printErr(`@result: ${JSON.stringify(result)}`);
+        printErr(`@_zones: ${JSON.stringify(_zones)}`);
 
         return result;
     }
@@ -220,12 +281,12 @@ while (true) {
 
         if (myBase === undefined && zone.isHasMyPods) {
             myBase = zone;
-            printErr(`find.myBase: ${JSON.stringify(myBase)}`);
+            printErr(`find.myBase: ${myBase.id}`);
         }
 
         if (enemyBase === undefined && zone.isHasEnemyPods) {
             enemyBase = zone;
-            printErr(`find.enemyBase: ${JSON.stringify(enemyBase)}`);
+            printErr(`find.enemyBase: ${enemyBase.id}`);
         }
     }
 
