@@ -1,3 +1,35 @@
+class Pod {
+    constructor(options) {
+        this.zone = options.zone;
+    }
+
+    get owner() {
+        return this.zone.owner;
+    }
+}
+// =============================================================================================
+class PodsList {
+    constructor() {
+        this.pods = [];
+    }
+
+    podsInZone(zone, owner = GAME_CONF.MY_ID) {
+        return this.pods.reduce((sum, pod) => {
+            return sum + (pod && pod.owner === owner && pod.zone.id === zone.id ? 1 : 0)
+        }, 0);
+    }
+
+    addPod(pod) {
+        this.pods.push(pod);
+    }
+
+    removePodFromZone(zone) {
+        let index = this.pods.findIndex((pod) => {
+            return pod.zone.id === zone.id;
+        });
+        this.pods.splice(index, 1);
+    }
+}
 // =============================================================================================
 class Zone {
     constructor(options) {
@@ -14,6 +46,22 @@ class Zone {
         this.pods = options.pods;
         this.isVisible = options.isVisible;
         this.platinum = options.platinum;
+
+        const podsInZone = podsList.podsInZone(this);
+        if (podsInZone > this.pods[GAME_CONF.MY_ID]) {
+            for (let i = this.pods[GAME_CONF.MY_ID] - podsInZone; i--;) {
+                printErr(`-- kill pod in zone ${this.id}`);
+                podsList.removePodFromZone(this);
+            }
+
+        } else if (this.pods[GAME_CONF.MY_ID] > podsInZone) {
+            for (let i = this.pods[GAME_CONF.MY_ID] - podsInZone; i--;) {
+                printErr(`++ new pod in zone ${this.id}`);
+                podsList.addPod(new Pod({
+                    zone: this
+                }));
+            }
+        }
     }
 
     addLink(zone) {
@@ -38,9 +86,6 @@ class Zone {
 }
 // =============================================================================================
 
-// =============================================================================================
-
-// =============================================================================================
 
 printErr(`~~~~~~~~~~~~~~~~~~ STEP #0 ~~~~~~~~~~~~~~~~~~`);
 
@@ -62,7 +107,7 @@ printErr(`GAME_CONF: ${JSON.stringify(GAME_CONF)}`);
 let steps = 0;
 
 const zones = {};
-const pods = [];
+const podsList = new PodsList();
 
 let myBase = undefined;
 let enemyBase = undefined;
@@ -163,7 +208,6 @@ while (true) {
     printErr(`_zonesStat.amountPods: ${JSON.stringify(_zonesStat)}`);
 
     let result = '';
-
     result = result.replace(/^\s+|\s+$/g,'');
     result = result || 'WAIT';
     printErr('PRINT: ' + result);
