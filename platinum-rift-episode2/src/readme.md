@@ -1,0 +1,1 @@
+webpack ./index.js dist.js
