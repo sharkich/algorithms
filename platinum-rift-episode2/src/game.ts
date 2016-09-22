@@ -54,23 +54,64 @@ export class Game {
         }
     }
 
-    playerPODsInZone(zone: Zone) {
+    playerPODsInZone(zone: Zone): number {
         return this.pods.reduce((sum: number, pod: POD) => {
             return sum + (pod.zone.id === zone.id ? 1 : 0)
         }, 0);
     }
 
-    addPODInZone(zone: Zone) {
+    addPODInZone(zone: Zone): POD {
         const id = `${zone.id}.${this.pods.length + 1}`;
+        let pod = new POD(id, zone);
         // printErr(`++ born pod #${id}`);
-        this.pods.push(new POD(id, zone));
+        this.pods.push(pod);
+        return pod;
     }
 
-    removePODFromZone(zone: Zone) {
+    removePODFromZone(zone: Zone): POD {
         let index = this.pods.findIndex((pod: POD) => {
             return pod.zone.id === zone.id;
         });
+        let pod = this.pods[index];
         // printErr(`-- kill pod #${this.pods[index].id}`);
         this.pods.splice(index, 1);
+        return pod;
+    }
+
+    initGoalZoneForPOD(pod: POD): Zone {
+        let index: number;
+        // for (index = Math.floor(Math.random() * Object.keys(this.zones).length) + 1; index === pod.zone.id;) {}
+        index = Math.floor(Math.random() * pod.zone.links.length);
+
+        pod.path.length = 0;
+        pod.path.push([pod.zone.id, pod.zone.links[index]]);
+
+        return this.zones[pod.zone.links[index]];
+    }
+
+    go(): string {
+        let moves = {};
+
+        this.pods.forEach((pod: POD) => {
+            if (!pod.goalZone || !pod.path.length) {
+                pod.goalZone = this.initGoalZoneForPOD(pod);
+            }
+            let move = pod.move();
+            if (!moves[move]) {
+                moves[move] = {
+                    from: move[0],
+                    to: move[1],
+                    count: 0,
+                };
+            }
+            moves[move].count++;
+        });
+        // printErr(`moves: ${JSON.stringify(moves)}`);
+
+        let result = '';
+        Object.keys(moves).forEach((key) => {
+            result += `${moves[key].count} ${moves[key].from} ${moves[key].to} `;
+        });
+        return result;
     }
 }

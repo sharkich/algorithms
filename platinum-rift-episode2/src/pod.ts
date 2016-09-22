@@ -11,4 +11,8 @@ export class POD {
         this.zone = zone;
         this.goalZone = goalZone;
     }
+
+    move() {
+        return this.path.pop();
+    }
 }
