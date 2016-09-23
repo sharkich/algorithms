@@ -78,15 +78,46 @@ export class Game {
         return pod;
     }
 
+    findNextGoal(zone: Zone, pod: POD) {
+        let zonesForFind: number[] = zone.links.filter((zoneIndex: number) => {
+            return pod.path.indexOf(this.zones[zoneIndex].id) === -1;
+        });
+
+        if (!zonesForFind.length) {
+            return;
+        }
+
+        let index: number = Math.floor(Math.random() * zonesForFind.length);
+
+        let goalZoneID: number = zonesForFind[index];
+
+        return this.zones[goalZoneID];
+    }
+
     initGoalZoneForPOD(pod: POD): Zone {
         let index: number;
         // for (index = Math.floor(Math.random() * Object.keys(this.zones).length) + 1; index === pod.zone.id;) {}
-        index = Math.floor(Math.random() * pod.zone.links.length);
+        // index = Math.floor(Math.random() * pod.zone.links.length);
+        // let goalZoneID = pod.zone.links[index];
 
         pod.path.length = 0;
-        pod.path.push([pod.zone.id, pod.zone.links[index]]);
 
-        return this.zones[pod.zone.links[index]];
+        let lasGoalZone: Zone = pod.zone;
+        let goalZone: Zone;
+        let step = 0;
+        while (true) {
+            goalZone = this.findNextGoal(lasGoalZone, pod);
+
+            if (!goalZone || step > 3) {
+                goalZone = lasGoalZone;
+                break;
+            }
+            pod.path.push([lasGoalZone.id, goalZone.id]);
+
+            lasGoalZone = goalZone;
+            step++;
+        }
+        return goalZone;
     }
 
     go(): string {
@@ -97,6 +128,9 @@ export class Game {
                 pod.goalZone = this.initGoalZoneForPOD(pod);
             }
             let move = pod.move();
+            if (!move) {
+                return;
+            }
             if (!moves[move]) {
                 moves[move] = {
                     from: move[0],
@@ -106,7 +140,6 @@ export class Game {
             }
             moves[move].count++;
         });
-        // printErr(`moves: ${JSON.stringify(moves)}`);
 
         let result = '';
         Object.keys(moves).forEach((key) => {

@@ -1,5 +1,9 @@
 import {Zone} from './zone';
 
+export interface Move {
+
+}
+
 export class POD {
     public id: string;
     public zone: Zone;
