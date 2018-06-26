@@ -1,1 +1,0 @@
-webpack ./index.js ./dist/dist.js --watch
