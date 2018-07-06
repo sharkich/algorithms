@@ -1,5 +1,10 @@
+import {bubbleSort} from './sorting';
+
 (() => {
-  let a: number;
-  a = 666;
-  console.log(a);
+
+  // Sorting
+  const input = [4, 2, 5, 1, 3, 0, 6];
+  const output = bubbleSort(input);
+  console.log(input, '->', output);
+
 })();
