@@ -1,6 +1,6 @@
 let tick = 0;
 
-export function bubbleSort (input: Array<number>): Array<number> {
+export function selectionSort(input: Array<number>): Array<number>  {
   const result = [...input];
   const length = result.length;
 
@@ -10,13 +10,17 @@ export function bubbleSort (input: Array<number>): Array<number> {
     result[index2] = buffer;
   };
 
-  for(let i = 0; i < length; i++) {
+  for (let i = 0; i < length; i++) {
+    let min = result[i];
+    let minIndex = i;
     for(let j = i + 1; j < length; j++) {
       tick++;
-      if (result[j] < result[i]) {
-        swap(i, j);
+      if (result[j] < min) {
+        min = result[j];
+        minIndex = j;
       }
     }
+    swap(i, minIndex);
   }
 
   console.log('tick', tick);

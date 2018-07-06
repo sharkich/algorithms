@@ -1,10 +1,10 @@
-import {bubbleSort, insertionSort} from './sorting';
+import {bubbleSort, insertionSort, selectionSort} from './sorting';
 
 (() => {
 
   // Sorting
   const input = [4, 2, 5, 1, 3, 0, 6];
-  const output = insertionSort(input);
+  const output = selectionSort(input);
   console.log(input, '->', output);
 
 })();
