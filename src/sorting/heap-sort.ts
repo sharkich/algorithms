@@ -17,7 +17,7 @@ class Heap {
 
 }
 
-export function heapSort(input: Array<number>): Array<number> {
+export function heapSortTODO(input: Array<number>): Array<number> {
   const result = [...input];
   const length = result.length;
 
