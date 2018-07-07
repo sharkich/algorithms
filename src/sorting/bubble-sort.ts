@@ -10,6 +10,7 @@ export function bubbleSort (input: Array<number>): Array<number> {
     result[index2] = buffer;
   };
 
+  // DO
   for(let i = 0; i < length; i++) {
     for(let j = i + 1; j < length; j++) {
       tick++;

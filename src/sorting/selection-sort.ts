@@ -10,6 +10,7 @@ export function selectionSort(input: Array<number>): Array<number>  {
     result[index2] = buffer;
   };
 
+  // DO
   for (let i = 0; i < length; i++) {
     let min = result[i];
     let minIndex = i;

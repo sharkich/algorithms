@@ -20,6 +20,7 @@ export function insertionSort(input: Array<number>): Array<number>  {
     }
   };
 
+  // DO
   for (let i = 0; i < length; i++) {
     for(let j = i + 1; j < length; j++) {
       tick++;
